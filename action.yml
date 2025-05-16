@@ -1,0 +1,15 @@
+name: "Configure Bonsai Package Build"
+description: "Used to apply the Bonsai Foundation's standardized versioning and release scheme"
+author: "Bonsai Foundation"
+branding:
+  icon: save
+  color: red
+inputs:
+  repo-token:
+    description: 'The GitHub token used for interacting with the repository (you should not want or need to change this)'
+    required: true
+    default: ${{ github.token }}
+#outputs:
+runs:
+  using: 'node20'
+  main: 'dist/main.js'
