@@ -1,7 +1,9 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import * as glob from '@actions/glob';
 import { RequestError } from '@octokit/request-error';
 import { strict as assert } from 'assert';
+import * as fs from 'fs';
 import * as semver from 'semver';
 import { SemVer } from 'semver';
 
@@ -218,11 +220,40 @@ async function main(): Promise<void> {
     }
 
     //==============================================================================================================================================================
-    // Emit MSBuild properties
+    // Determine if workflow images need to be built
+    //==============================================================================================================================================================
+    //TODO: Might be interesting support detecting if any existing SVGs are stale
+    const documentationWorkflowPaths = core.getInput('documentation-workflows');
+    let needWorkflowImageRender = false;
+    if (documentationWorkflowPaths) {
+        core.debug(`Looking for Bonsai workflows matching patterns '${documentationWorkflowPaths}'`);
+        const bonsaiWorkflows = await glob.create(documentationWorkflowPaths, {
+            matchDirectories: false,
+            implicitDescendants: false,
+        });
+
+        for await (const bonsaiWorkflow of bonsaiWorkflows.globGenerator()) {
+            core.info(`Found one or more Bonsai workflows used by documentation, image rendering will be needed.`);
+            needWorkflowImageRender = true;
+            break;
+        }
+
+        if (!needWorkflowImageRender) {
+            if (!fs.existsSync('.git')) {
+                core.warning("Could not locate Bonsai workflows used for documentation, and there's no .git folder in the workspace, did you forget to checkout?");
+            } else {
+                core.info("No Bonsai workflows were found in documentation-related locations.");
+            }
+        }
+    }
+
+    //==============================================================================================================================================================
+    // Emit outputs
     //==============================================================================================================================================================
     core.info(`Configuring build environment to build${isForRelease ? ' and release' : ''} version ${version.format()}`);
     core.exportVariable('CiBuildVersion', version.format());
     core.exportVariable('CiIsForRelease', isForRelease ? 'true' : 'false');
+    core.setOutput('need-workflow-image-render', needWorkflowImageRender ? 'true' : 'false');
 }
 
 // Node's default error printer is extremely obnoxious and tries to be "helpful" by printing the source line where the exception ocurred

@@ -5,10 +5,18 @@ branding:
   icon: save
   color: red
 inputs:
+  documentation-workflows:
+    description: "One or more glob patterns to check for the presence of workflows that will be rendered for documentation."
+    default: |
+      docs/workflows/**/*.bonsai
+      docs/examples/**/*.bonsai
   repo-token:
-    description: 'The GitHub token used for interacting with the repository (you should not want or need to change this)'
+    description: "The GitHub token used for interacting with the repository (you should not want or need to change this)"
     required: true
     default: ${{ github.token }}
+outputs:
+  need-workflow-image-render:
+    description: "`true` if there are Bonsai workflows that need to be rendered for the documentation website."
 #outputs:
 runs:
   using: 'node20'
