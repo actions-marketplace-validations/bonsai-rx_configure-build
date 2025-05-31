@@ -59,7 +59,7 @@ async function main(): Promise<void> {
         core.info(`Got version ${version.format()} from release event.`);
     } else if (context.eventName == 'workflow_dispatch') {
         //TODO: These should use inputs instead
-        const versionString = context.payload.inputs.version;
+        const versionString = context.payload.inputs?.version;
         if (versionString) {
             version = semver.parse(versionString);
             if (!version) {
@@ -72,7 +72,7 @@ async function main(): Promise<void> {
             useFallbackVersion = true;
         }
 
-        if (context.payload.inputs.will_publish_packages === 'true') {
+        if (context.payload.inputs?.will_publish_packages === 'true') {
             isForRelease = true;
 
             if (!version) {
