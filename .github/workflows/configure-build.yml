@@ -1,17 +1,18 @@
 # =======================================================================================================================================================================
-# Build and deploy configure-build
+# Verify and deploy configure-build
 # =======================================================================================================================================================================
-#TODO: Add proper release deployment, this placeholder just makes v1 track main
 name: configure-build
 on:
   push:
     # This prevents tag pushes from triggering this workflow
     branches: ['*']
+  release:
+    types: [published]
 env:
   GIT_ADVICE: 0
 jobs:
-  verify:
-    name: Verify
+  verify-and-deploy:
+    name: Verify and deploy
     runs-on: ubuntu-latest
     permissions:
       # Needed to bump tags
@@ -41,7 +42,7 @@ jobs:
       # ----------------------------------------------------------------------- Verify nothing changed
       # Developers are expected to push the updated `dist` folder with every commit as this will
       # later be required for testing and allows using intermediat commits on GitHub Actions when
-      # it is nedcessary.
+      # it is necessary.
       - name: Verify dist folder was up-to-date
         id: verify-dist
         run: |
@@ -55,8 +56,9 @@ jobs:
           name: dist
           path: dist/**
 
-      # ----------------------------------------------------------------------- Deploy
-      #TODO: Replace with something proper
-      - name: Update `v1` tag
-        if: github.ref == 'refs/heads/main'
-        run: git push --force origin ${{github.sha}}:refs/tags/v1
+      # ----------------------------------------------------------------------- Bump major version tag
+      - name: Bump major version tag
+        if: github.event_name == 'release'
+        run: node .github/workflows/bump-tag.mjs
+        env:
+          TAG: ${{github.event.release.tag_name}}

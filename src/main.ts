@@ -59,7 +59,7 @@ async function main(): Promise<void> {
         core.info(`Got version ${version.format()} from release event.`);
     } else if (context.eventName == 'workflow_dispatch') {
         //TODO: These should use inputs instead
-        const versionString = context.payload.inputs.version;
+        const versionString = context.payload.inputs?.version;
         if (versionString) {
             version = semver.parse(versionString);
             if (!version) {
@@ -72,7 +72,7 @@ async function main(): Promise<void> {
             useFallbackVersion = true;
         }
 
-        if (context.payload.inputs.will_publish_packages === 'true') {
+        if (context.payload.inputs?.will_publish_packages === 'true') {
             isForRelease = true;
 
             if (!version) {
@@ -131,9 +131,10 @@ async function main(): Promise<void> {
             version = semver.parse(versionString);
 
             if (!version) {
-                //TODO: Should we allo falling back on 0.0.0 here? Try an older release?
-                core.setFailed(`Most recent release '${versionString}' is not a valid semver version!`);
-                return;
+                //TODO: Maybe make this behavior configurable?
+                core.warning(`Most recent release '${versionString}' is not a valid semver version, using 0.0.0 instead.`);
+                version = semver.parse('0.0.0');
+                assert(version);
             }
 
             core.info(`Got most recent release version: ${version.format()}`);
